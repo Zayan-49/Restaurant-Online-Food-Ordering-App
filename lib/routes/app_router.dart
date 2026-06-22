@@ -7,6 +7,7 @@ import '../features/auth/screens/otp_verification_screen.dart';
 import '../features/auth/screens/reset_password_screen.dart';
 import '../features/cart/screens/cart_screen.dart';
 import '../features/checkout/screens/checkout_screen.dart';
+import '../features/home/models/food_model.dart' as model;
 import '../features/home/screens/home_screen.dart';
 import '../features/orders/screens/orders_screen.dart';
 import '../features/onboarding/screens/onboarding_screen.dart';
@@ -110,9 +111,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.productDetails,
       name: AppRouteNames.productDetails,
-      pageBuilder: (context, state) => const NoTransitionPage(
-        child: ProductDetailsScreen(),
-      ),
+      pageBuilder: (context, state) {
+        final food = state.extra as model.FoodModel;
+        return NoTransitionPage(
+          child: ProductDetailsScreen(food: food),
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.cart,
