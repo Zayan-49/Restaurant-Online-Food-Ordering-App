@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 class NavigationService {
   NavigationService._();
   static final NavigationService instance = NavigationService._();

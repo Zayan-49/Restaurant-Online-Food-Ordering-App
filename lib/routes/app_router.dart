@@ -1,19 +1,19 @@
-﻿import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 
-import '../features/auth/screens/login_screen.dart';
-import '../features/auth/screens/register_screen.dart';
-import '../features/auth/screens/forgot_password_screen.dart';
-import '../features/auth/screens/otp_verification_screen.dart';
-import '../features/auth/screens/reset_password_screen.dart';
-import '../features/cart/screens/cart_screen.dart';
-import '../features/checkout/screens/checkout_screen.dart';
-import '../features/home/models/food_model.dart' as model;
-import '../features/home/screens/home_screen.dart';
-import '../features/orders/screens/orders_screen.dart';
-import '../features/onboarding/screens/onboarding_screen.dart';
-import '../features/product/screens/product_details_screen.dart';
-import '../features/profile/screens/edit_profile_screen.dart';
-import '../features/splash/screens/splash_screen.dart';
+import 'package:online_food_ordering/features/shared/auth/screens/forgot_password_screen.dart';
+import 'package:online_food_ordering/features/shared/auth/screens/login_screen.dart';
+import 'package:online_food_ordering/features/shared/auth/screens/otp_verification_screen.dart';
+import 'package:online_food_ordering/features/shared/auth/screens/register_screen.dart';
+import 'package:online_food_ordering/features/shared/auth/screens/reset_password_screen.dart';
+import 'package:online_food_ordering/features/customer/cart/screens/cart_screen.dart';
+import 'package:online_food_ordering/features/customer/checkout/screens/checkout_screen.dart';
+import 'package:online_food_ordering/core/models/food_model.dart' as model;
+import 'package:online_food_ordering/features/customer/home/screens/home_screen.dart';
+import 'package:online_food_ordering/features/customer/orders/screens/orders_screen.dart';
+import 'package:online_food_ordering/features/customer/onboarding/screens/onboarding_screen.dart';
+import 'package:online_food_ordering/features/customer/product/screens/product_details_screen.dart';
+import 'package:online_food_ordering/features/customer/profile/screens/edit_profile_screen.dart';
+import 'package:online_food_ordering/features/shared/splash/screens/splash_screen.dart';
 
 class AppRoutes {
   AppRoutes._();

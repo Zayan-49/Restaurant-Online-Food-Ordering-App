@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../responsive/screen_breakpoints.dart';
 extension BuildContextX on BuildContext {
   ThemeData get theme => Theme.of(this);

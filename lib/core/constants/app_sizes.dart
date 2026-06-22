@@ -1,4 +1,4 @@
-﻿class AppSizes {
+class AppSizes {
   AppSizes._();
   static const double spacingXxs = 4;
   static const double spacingXs = 8;

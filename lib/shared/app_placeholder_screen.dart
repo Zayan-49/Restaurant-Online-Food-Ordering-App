@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 class AppPlaceholderScreen extends StatelessWidget {
   const AppPlaceholderScreen({super.key, required this.title});
   final String title;

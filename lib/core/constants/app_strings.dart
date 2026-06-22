@@ -1,4 +1,4 @@
-﻿class AppStrings {
+class AppStrings {
   AppStrings._();
   static const String appName = 'Luxury Food Ordering';
   static const String splashTitle = 'Splash Screen';

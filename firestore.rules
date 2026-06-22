@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user has a specific role
+    function hasRole(role) {
+      return request.auth != null && request.auth.token.role == role;
+    }
+
+    // Orders collection
+    match /orders/{orderId} {
+      // Customers can create orders and read their own orders
+      allow create: if request.auth != null;
+      allow read: if request.auth != null && (resource.data.customerId == request.auth.uid || hasRole('restaurant_admin'));
+
+      // Only Restaurant Admin can update order status
+      allow update: if hasRole('restaurant_admin');
+
+      // Prevent deletion
+      allow delete: if false;
+    }
+
+    // Menu/Food items
+    match /food/{foodId} {
+      allow read: if true; // Publicly readable
+      allow write: if hasRole('restaurant_admin'); // Only admin can manage menu
+    }
+  }
+}

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 /// Centralized color palette for the luxury restaurant brand.
 class AppColors {
   AppColors._();

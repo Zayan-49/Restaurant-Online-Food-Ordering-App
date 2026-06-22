@@ -1,4 +1,4 @@
-﻿class StorageService {
+class StorageService {
   StorageService._();
   static final StorageService instance = StorageService._();
   final Map<String, Object?> _cache = <String, Object?>{};

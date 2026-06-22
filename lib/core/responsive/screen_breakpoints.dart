@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 
 /// Professional responsive breakpoints for luxury app design
 class ScreenBreakpoints {
