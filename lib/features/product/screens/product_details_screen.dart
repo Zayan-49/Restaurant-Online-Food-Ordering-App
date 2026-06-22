@@ -33,28 +33,41 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: isFavorite ? Colors.red : null,
-            ),
-            onPressed: () => ref.read(favoritesProvider.notifier).toggleFavorite(widget.food.id),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      extendBodyBehindAppBar: true,
       body: SafeArea(
-        top: false,
-        child: isDesktop ? _buildDesktopLayout(padding) : _buildMobileLayout(padding),
+        top: true,
+        bottom: true,
+        right: true,
+        left: true,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Stack(
+            children: [
+              // Main Content
+              isDesktop ? _buildDesktopLayout(padding) : _buildMobileLayout(padding),
+
+              // Custom Back Button Overlay
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 16,
+                child: _CircularIconButton(
+                  icon: Icons.arrow_back_ios_new_rounded,
+                  onPressed: () => context.pop(),
+                ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.2),
+              ),
+
+              // Favorite Button Overlay
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                right: 16,
+                child: _CircularIconButton(
+                  icon: isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                  iconColor: isFavorite ? Colors.red : null,
+                  onPressed: () => ref.read(favoritesProvider.notifier).toggleFavorite(widget.food.id),
+                ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.2),
+              ),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: _buildBottomBar(padding),
     );
@@ -65,20 +78,25 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Food Image
+          // Food Image with HERO + subtle entry animation
           Hero(
-            tag: widget.food.id,
+            tag: 'food_image_${widget.food.id}',
             child: Container(
-              height: MediaQuery.sizeOf(context).height * 0.4,
+              height: MediaQuery.sizeOf(context).height * 0.45,
               width: double.infinity,
-              decoration: BoxDecoration(
-                image: const DecorationImage(
-                  image: AssetImage('assets/images/Burger.jpg'), // Placeholder
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/Burger.jpg'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
-          ),
+          ).animate().shimmer(duration: 1000.ms, color: Colors.white.withValues(alpha: 0.2)).scale(
+                begin: const Offset(1.1, 1.1),
+                end: const Offset(1.0, 1.0),
+                duration: 600.ms,
+                curve: Curves.easeOut,
+              ),
           
           Padding(
             padding: EdgeInsets.all(padding),
@@ -88,6 +106,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 _buildHeaderInfo().animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
                 const SizedBox(height: 24),
                 _buildDescription().animate().fadeIn(delay: 200.ms, duration: 400.ms).slideY(begin: 0.1),
+                const SizedBox(height: 32),
+                _buildQuantitySection(),
               ],
             ),
           ),
@@ -101,15 +121,15 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: ResponsiveHelper.getMaxWidth(context)),
         child: Padding(
-          padding: EdgeInsets.all(padding),
+          padding: EdgeInsets.all(padding + 20),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Image Section
+              // Image Section with HERO + Animation
               Expanded(
                 flex: 1,
                 child: Hero(
-                  tag: widget.food.id,
+                  tag: 'food_image_${widget.food.id}',
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: AspectRatio(
@@ -120,20 +140,26 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       ),
                     ),
                   ),
-                ),
+                ).animate().scale(
+                      begin: const Offset(0.9, 0.9),
+                      end: const Offset(1.0, 1.0),
+                      duration: 700.ms,
+                      curve: Curves.easeOutBack,
+                    ).fadeIn(duration: 400.ms),
               ),
-              const SizedBox(width: 48),
+              const SizedBox(width: 64),
               // Details Section
               Expanded(
                 flex: 1,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeaderInfo().animate().fadeIn(duration: 400.ms).slideX(begin: 0.05),
                     const SizedBox(height: 32),
                     _buildDescription().animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.05),
-                    const Spacer(),
-                    _buildDesktopQuantitySelector(),
+                    const SizedBox(height: 48),
+                    _buildQuantitySection().animate().fadeIn(delay: 400.ms),
                   ],
                 ),
               ),
@@ -220,12 +246,15 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     );
   }
 
-  Widget _buildDesktopQuantitySelector() {
+  Widget _buildQuantitySection() {
     return Row(
       children: [
         Text(
           'Quantity',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: ResponsiveHelper.getTitleMediumFontSize(context),
+              ),
         ),
         const SizedBox(width: 24),
         _buildCounter(),
@@ -291,7 +320,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  // Logic to add multiple quantity
                   for (int i = 0; i < _quantity; i++) {
                     ref.read(cartProvider.notifier).addItem(widget.food);
                   }
@@ -299,6 +327,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     SnackBar(
                       content: Text('$_quantity x ${widget.food.title} added to cart'),
                       behavior: SnackBarBehavior.floating,
+                      width: 280,
                     ),
                   );
                 },
@@ -311,6 +340,40 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _CircularIconButton extends StatelessWidget {
+  const _CircularIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.iconColor,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: 20, color: iconColor ?? Colors.black87),
       ),
     );
   }

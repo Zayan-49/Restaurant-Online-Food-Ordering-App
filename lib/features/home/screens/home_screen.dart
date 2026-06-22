@@ -10,6 +10,7 @@ import 'package:online_food_ordering/features/home/widgets/category_selector.dar
 import 'package:online_food_ordering/features/home/widgets/responsive_food_grid.dart';
 import 'package:online_food_ordering/features/home/widgets/custom_bottom_navbar.dart';
 import 'package:online_food_ordering/features/home/widgets/section_title.dart';
+import 'package:online_food_ordering/features/home/screens/favorites_screen.dart';
 import 'package:online_food_ordering/features/profile/screens/profile_screen.dart';
 import 'package:online_food_ordering/features/orders/screens/orders_screen.dart';
 
@@ -26,7 +27,7 @@ class HomeScreen extends ConsumerWidget {
         index: bottomNavIndex,
         children: [
           const _HomeBody(),
-          const Center(child: Text('Favorites Screen')),
+          const FavoritesScreen(),
           const OrdersScreen(),
           const ProfileScreen(),
         ],

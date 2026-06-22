@@ -41,53 +41,53 @@ class FoodCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image section with flexible height
+              // Image section with Hero animation
               Expanded(
                 flex: 5,
-                child: Hero(
-                  tag: food.id,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'food_image_${food.id}', // Unique consistent tag
+                      child: Image.asset(
                         'assets/images/Burger.jpg',
                         fit: BoxFit.cover,
                       ),
-                      // Rating badge
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 14,
-                                color: Colors.amber,
+                    ),
+                    // Rating badge
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Colors.amber,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '${food.rating}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${food.rating}',
-                                style: const TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -110,7 +110,7 @@ class FoodCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       
-                      // Constrained description to prevent vertical overflow
+                      // Constrained description
                       Expanded(
                         child: SingleChildScrollView(
                           physics: const NeverScrollableScrollPhysics(),
