@@ -6,15 +6,16 @@ import 'core/theme/app_theme.dart';
 import 'routes/app_router.dart';
 
 void main() {
+  // SETTING TO RESTAURANT BY DEFAULT FOR TESTING
+  const config = AppConfig(
+    appType: AppType.restaurant, // Changed from customer to restaurant
+    appName: 'Restaurant Admin - Test',
+  );
+
   runApp(
     ProviderScope(
       overrides: [
-        appConfigProvider.overrideWithValue(
-          const AppConfig(
-            appType: AppType.customer,
-            appName: 'Luxury Food Ordering',
-          ),
-        ),
+        appConfigProvider.overrideWithValue(config),
       ],
       child: const LuxuryFoodOrderingApp(),
     ),

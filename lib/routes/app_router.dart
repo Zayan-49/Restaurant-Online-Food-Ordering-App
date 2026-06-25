@@ -1,5 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:online_food_ordering/core/config/app_config.dart';
 import 'package:online_food_ordering/features/shared/auth/screens/forgot_password_screen.dart';
 import 'package:online_food_ordering/features/shared/auth/screens/login_screen.dart';
 import 'package:online_food_ordering/features/shared/auth/screens/otp_verification_screen.dart';
@@ -14,6 +17,7 @@ import 'package:online_food_ordering/features/customer/onboarding/screens/onboar
 import 'package:online_food_ordering/features/customer/product/screens/product_details_screen.dart';
 import 'package:online_food_ordering/features/customer/profile/screens/edit_profile_screen.dart';
 import 'package:online_food_ordering/features/shared/splash/screens/splash_screen.dart';
+import 'package:online_food_ordering/features/restaurant/screens/restaurant_dashboard_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -30,6 +34,7 @@ class AppRoutes {
   static const String checkout = '/checkout';
   static const String orders = '/orders';
   static const String editProfile = '/edit-profile';
+  static const String adminDashboard = '/admin';
 }
 
 class AppRouteNames {
@@ -47,6 +52,7 @@ class AppRouteNames {
   static const String checkout = 'checkout';
   static const String orders = 'orders';
   static const String editProfile = 'editProfile';
+  static const String adminDashboard = 'adminDashboard';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -101,11 +107,27 @@ final GoRouter appRouter = GoRouter(
         child: ResetPasswordScreen(),
       ),
     ),
+
     GoRoute(
       path: AppRoutes.home,
       name: AppRouteNames.home,
+      pageBuilder: (context, state) => NoTransitionPage(
+        child: Consumer(
+          builder: (context, ref, child) {
+            final config = ref.watch(appConfigProvider);
+            if (config.appType == AppType.restaurant) {
+              return const RestaurantDashboardScreen();
+            }
+            return const RestaurantDashboardScreen();
+          },
+        ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.adminDashboard,
+      name: AppRouteNames.adminDashboard,
       pageBuilder: (context, state) => const NoTransitionPage(
-        child: HomeScreen(),
+        child: RestaurantDashboardScreen(),
       ),
     ),
     GoRoute(
