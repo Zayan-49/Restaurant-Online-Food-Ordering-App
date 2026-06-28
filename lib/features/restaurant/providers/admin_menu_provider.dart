@@ -2,33 +2,51 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:online_food_ordering/core/models/food_model.dart';
 import 'package:online_food_ordering/features/customer/home/providers/home_provider.dart';
 
-/// Provider for the admin menu state.
+/// Fully functional provider for admin menu operations.
 final adminMenuProvider = NotifierProvider<AdminMenuNotifier, List<FoodModel>>(AdminMenuNotifier.new);
 
 class AdminMenuNotifier extends Notifier<List<FoodModel>> {
   @override
   List<FoodModel> build() {
-    // Populate with existing food data from home_provider
     return ref.watch(allFoodsProvider);
   }
 
-  void toggleAvailability(String id) {
-    // For now, FoodModel doesn't have an isAvailable field. 
-    // In a real app, we would add it. Let's simulate it by updating the state.
-    // Since FoodModel is immutable, we'd normally use copyWith if it had the field.
+  void addItem({
+    required String title, 
+    required double price, 
+    required String category, 
+    required String description,
+    String? imagePath,
+  }) {
+    final newItem = FoodModel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      price: price,
+      category: category,
+      description: description,
+      imageUrl: imagePath ?? 'assets/images/Burger.jpg',
+      rating: 5.0,
+      reviewCount: 0,
+    );
+    state = [...state, newItem];
   }
 
-  void updatePrice(String id, double newPrice) {
+  void updateItem(String id, {
+    String? title, 
+    double? price, 
+    String? category,
+    String? imagePath,
+  }) {
     state = [
       for (final food in state)
         if (food.id == id)
           FoodModel(
             id: food.id,
-            title: food.title,
+            title: title ?? food.title,
             description: food.description,
-            category: food.category,
-            price: newPrice,
-            imageUrl: food.imageUrl,
+            category: category ?? food.category,
+            price: price ?? food.price,
+            imageUrl: imagePath ?? food.imageUrl,
             rating: food.rating,
             reviewCount: food.reviewCount,
           )
@@ -39,9 +57,5 @@ class AdminMenuNotifier extends Notifier<List<FoodModel>> {
 
   void deleteItem(String id) {
     state = state.where((food) => food.id != id).toList();
-  }
-
-  void addItem(FoodModel newItem) {
-    state = [...state, newItem];
   }
 }

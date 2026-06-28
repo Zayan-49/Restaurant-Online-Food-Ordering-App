@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
+import 'package:online_food_ordering/core/providers/restaurant_profile_provider.dart';
 import 'package:online_food_ordering/features/customer/cart/providers/cart_providers.dart';
 import 'package:online_food_ordering/routes/app_router.dart';
+import 'package:online_food_ordering/core/constants/app_assets.dart';
 
-/// Home screen header with greeting and location.
 class HomeHeader extends ConsumerWidget {
   const HomeHeader({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final restaurant = ref.watch(restaurantProfileProvider);
+    final isOpen = restaurant.isCurrentlyOpen;
     final cartItemCount = ref.watch(cartItemCountProvider);
 
     return Padding(
@@ -22,44 +25,53 @@ class HomeHeader extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // 1. Restaurant Logo
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  AppAssets.logo,
+                  width: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
+                  height: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 12),
+              
+              // 2. Restaurant Name & Status
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Hello, John',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontSize: ResponsiveHelper.getHeadlineMediumFontSize(
-                                context),
-                          ),
+                    Row(
+                      children: [
+                        Text(
+                          restaurant.name,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: ResponsiveHelper.getTitleLargeFontSize(context),
+                              ),
+                        ),
+                        const SizedBox(width: 8),
+                        _StatusBadge(isOpen: isOpen),
+                      ],
                     ),
-                    SizedBox(
-                        height: ResponsiveHelper.getAdaptiveSize(context,
-                            mobile: 4, tablet: 6, desktop: 8)),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
                         Icon(
                           Icons.location_on_rounded,
-                          size: ResponsiveHelper.getAdaptiveSize(context,
-                              mobile: 14, tablet: 16, desktop: 18),
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        SizedBox(
-                            width: ResponsiveHelper.getAdaptiveSize(context,
-                                mobile: 4, tablet: 6, desktop: 8)),
+                        const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            'New York, NY',
+                            restaurant.address,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                                  fontSize: ResponsiveHelper
-                                      .getBodyMediumFontSize(context),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Colors.grey.shade600,
                                 ),
                           ),
                         ),
@@ -68,67 +80,9 @@ class HomeHeader extends ConsumerWidget {
                   ],
                 ),
               ),
-              SizedBox(
-                  width: ResponsiveHelper.getAdaptiveSize(context,
-                      mobile: 12, tablet: 16, desktop: 20)),
 
-              // Cart icon with badge
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    onPressed: () => context.pushNamed(AppRouteNames.cart),
-                    icon: Icon(
-                      Icons.shopping_cart_outlined,
-                      size: ResponsiveHelper.getAdaptiveSize(context,
-                          mobile: 24, tablet: 28, desktop: 32),
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  if (cartItemCount > 0)
-                    Positioned(
-                      right: 4,
-                      top: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '$cartItemCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              SizedBox(
-                  width: ResponsiveHelper.getAdaptiveSize(context,
-                      mobile: 12, tablet: 16, desktop: 20)),
-              CircleAvatar(
-                radius: ResponsiveHelper.getAdaptiveSize(context,
-                    mobile: 24, tablet: 28, desktop: 32),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                child: Text(
-                  'JD',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontSize:
-                            ResponsiveHelper.getTitleMediumFontSize(context),
-                      ),
-                ),
-              ),
+              // 3. Cart Icon with Badge
+              _HeaderCartIcon(cartItemCount: cartItemCount),
             ],
           ),
         ],
@@ -137,3 +91,83 @@ class HomeHeader extends ConsumerWidget {
   }
 }
 
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.isOpen});
+  final bool isOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isOpen ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.circle,
+            size: 6,
+            color: isOpen ? Colors.green : Colors.red,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            isOpen ? 'Open Now' : 'Closed',
+            style: TextStyle(
+              color: isOpen ? Colors.green : Colors.red,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderCartIcon extends StatelessWidget {
+  const _HeaderCartIcon({required this.cartItemCount});
+  final int cartItemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: () => context.pushNamed(AppRouteNames.cart),
+          icon: Icon(
+            Icons.shopping_cart_outlined,
+            size: ResponsiveHelper.getAdaptiveSize(context,
+                mobile: 24, tablet: 28, desktop: 30),
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        if (cartItemCount > 0)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 1.5),
+              ),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              child: Text(
+                '$cartItemCount',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}

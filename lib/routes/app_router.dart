@@ -17,7 +17,7 @@ import 'package:online_food_ordering/features/customer/onboarding/screens/onboar
 import 'package:online_food_ordering/features/customer/product/screens/product_details_screen.dart';
 import 'package:online_food_ordering/features/customer/profile/screens/edit_profile_screen.dart';
 import 'package:online_food_ordering/features/shared/splash/screens/splash_screen.dart';
-import 'package:online_food_ordering/features/restaurant/screens/restaurant_dashboard_screen.dart';
+import 'package:online_food_ordering/features/restaurant/screens/admin_shell_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -34,7 +34,7 @@ class AppRoutes {
   static const String checkout = '/checkout';
   static const String orders = '/orders';
   static const String editProfile = '/edit-profile';
-  static const String adminDashboard = '/admin';
+  static const String adminShell = '/admin';
 }
 
 class AppRouteNames {
@@ -52,7 +52,7 @@ class AppRouteNames {
   static const String checkout = 'checkout';
   static const String orders = 'orders';
   static const String editProfile = 'editProfile';
-  static const String adminDashboard = 'adminDashboard';
+  static const String adminShell = 'adminShell';
 }
 
 final GoRouter appRouter = GoRouter(
@@ -107,7 +107,6 @@ final GoRouter appRouter = GoRouter(
         child: ResetPasswordScreen(),
       ),
     ),
-
     GoRoute(
       path: AppRoutes.home,
       name: AppRouteNames.home,
@@ -116,18 +115,18 @@ final GoRouter appRouter = GoRouter(
           builder: (context, ref, child) {
             final config = ref.watch(appConfigProvider);
             if (config.appType == AppType.restaurant) {
-              return const RestaurantDashboardScreen();
+              return const HomeScreen();
             }
-            return const RestaurantDashboardScreen();
+            return const HomeScreen();
           },
         ),
       ),
     ),
     GoRoute(
-      path: AppRoutes.adminDashboard,
-      name: AppRouteNames.adminDashboard,
+      path: AppRoutes.adminShell,
+      name: AppRouteNames.adminShell,
       pageBuilder: (context, state) => const NoTransitionPage(
-        child: RestaurantDashboardScreen(),
+        child: AdminShellScreen(),
       ),
     ),
     GoRoute(
@@ -161,6 +160,7 @@ final GoRouter appRouter = GoRouter(
         child: OrdersScreen(),
       ),
     ),
+
     GoRoute(
       path: AppRoutes.editProfile,
       name: AppRouteNames.editProfile,
@@ -170,3 +170,4 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+

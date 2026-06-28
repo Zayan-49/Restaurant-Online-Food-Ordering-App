@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:online_food_ordering/core/constants/app_colors.dart';
 import '../models/onboarding_model.dart';
 
