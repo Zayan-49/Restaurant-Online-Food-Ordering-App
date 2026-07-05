@@ -3,9 +3,16 @@ import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/core/constants/app_assets.dart';
 import 'package:online_food_ordering/core/constants/app_strings.dart';
 
-/// Header showing logo and app name used on auth screens.
+/// Header showing logo and optional custom title/subtitle for auth screens.
 class AuthHeader extends StatelessWidget {
-  const AuthHeader({super.key});
+  const AuthHeader({
+    super.key,
+    this.title,
+    this.subtitle,
+  });
+
+  final String? title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +34,23 @@ class AuthHeader extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          AppStrings.appName,
+          title ?? AppStrings.appName,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontSize: titleFontSize,
                 fontWeight: FontWeight.bold,
               ),
           textAlign: TextAlign.center,
         ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            subtitle!,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ],
     );
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/core/models/cart_item_model.dart';
+import 'package:online_food_ordering/core/constants/app_assets.dart';
 
 class CartItemWidget extends StatelessWidget {
   const CartItemWidget({
@@ -43,11 +45,18 @@ class CartItemWidget extends StatelessWidget {
           // Food image
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              'assets/images/Burger.jpg', // Placeholder for now
+            child: CachedNetworkImage(
+              imageUrl: item.food.imageUrl,
               width: imageSize,
               height: imageSize,
               fit: BoxFit.cover,
+              placeholder: (context, url) => Container(color: Colors.grey.shade100),
+              errorWidget: (context, url, error) => Image.asset(
+                AppAssets.burgerPlaceholder, // Using established placeholder
+                width: imageSize,
+                height: imageSize,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           SizedBox(width: padding),

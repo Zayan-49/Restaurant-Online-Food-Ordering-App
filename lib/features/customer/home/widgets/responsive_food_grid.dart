@@ -3,14 +3,15 @@ import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/core/models/food_model.dart';
 import 'package:online_food_ordering/features/customer/home/widgets/food_card.dart';
 
-/// Responsive food grid that adapts to screen size using MaxCrossAxisExtent.
 class ResponsiveFoodGrid extends StatelessWidget {
   const ResponsiveFoodGrid({
     super.key,
     required this.foods,
+    this.heroTagPrefix = 'home', // Default prefix to distinguish between grids
   });
 
   final List<FoodModel> foods;
+  final String heroTagPrefix;
 
   @override
   Widget build(BuildContext context) {
@@ -19,14 +20,13 @@ class ResponsiveFoodGrid extends StatelessWidget {
     final padding = ResponsiveHelper.getAdaptiveSize(context,
         mobile: 8, tablet: 12, desktop: 16);
 
-    // Dynamic extent and aspect ratio based on screen type
     double maxExtent = 180;
-    double aspectRatio = 0.72; // Default for mobile
-    
+    double aspectRatio = 0.72;
+
     final width = MediaQuery.sizeOf(context).width;
     if (width > 1200) {
       maxExtent = 280;
-      aspectRatio = 0.85; // Wider for large desktop
+      aspectRatio = 0.85;
     } else if (width > 800) {
       maxExtent = 240;
       aspectRatio = 0.8;
@@ -52,7 +52,12 @@ class ResponsiveFoodGrid extends StatelessWidget {
         ),
         itemCount: foods.length,
         itemBuilder: (context, index) {
-          return FoodCard(food: foods[index]);
+          final food = foods[index];
+          return FoodCard(
+            food: food,
+            // Generate unique tag per grid instance + food ID
+            heroTag: '${heroTagPrefix}_${food.id}',
+          );
         },
       ),
     );

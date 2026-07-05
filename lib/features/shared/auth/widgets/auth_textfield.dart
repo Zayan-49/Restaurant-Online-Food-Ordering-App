@@ -11,6 +11,7 @@ class AuthTextField extends StatelessWidget {
     this.isPassword = false,
     this.validator,
     this.onChanged,
+    this.keyboardType,
   });
 
   final TextEditingController controller;
@@ -19,6 +20,7 @@ class AuthTextField extends StatelessWidget {
   final bool isPassword;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +31,7 @@ class AuthTextField extends StatelessWidget {
       obscureText: isPassword,
       onChanged: onChanged,
       validator: validator,
+      keyboardType: keyboardType,
       style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: fontSize),
       decoration: InputDecoration(
         labelText: label,

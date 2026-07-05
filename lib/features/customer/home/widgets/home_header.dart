@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/core/providers/restaurant_profile_provider.dart';
 import 'package:online_food_ordering/features/customer/cart/providers/cart_providers.dart';
@@ -12,8 +13,7 @@ class HomeHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final restaurant = ref.watch(restaurantProfileProvider);
-    final isOpen = restaurant.isCurrentlyOpen;
+    final restaurantAsync = ref.watch(restaurantProfileProvider);
     final cartItemCount = ref.watch(cartItemCountProvider);
 
     return Padding(
@@ -21,71 +21,87 @@ class HomeHeader extends ConsumerWidget {
         horizontal: ResponsiveHelper.getAdaptiveSize(context,
             mobile: 16, tablet: 20, desktop: 24),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: restaurantAsync.when(
+        data: (restaurant) {
+          final isOpen = restaurant.isCurrentlyOpen;
+          
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Restaurant Logo
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  AppAssets.logo,
-                  width: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
-                  height: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(width: 12),
-              
-              // 2. Restaurant Name & Status
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          restaurant.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: ResponsiveHelper.getTitleLargeFontSize(context),
-                              ),
-                        ),
-                        const SizedBox(width: 8),
-                        _StatusBadge(isOpen: isOpen),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on_rounded,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            restaurant.address,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey.shade600,
-                                ),
+              Row(
+                children: [
+                  // 1. Dynamic Restaurant Logo from Supabase
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: restaurant.logoUrl != null 
+                        ? CachedNetworkImage(
+                            imageUrl: restaurant.logoUrl!,
+                            width: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
+                            height: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(color: Colors.grey.shade200),
+                            errorWidget: (context, url, error) => Image.asset(AppAssets.logo),
+                          )
+                        : Image.asset(
+                            AppAssets.logo,
+                            width: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
+                            height: ResponsiveHelper.getAdaptiveSize(context, mobile: 44, desktop: 52),
                           ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // 2. Dynamic Name & Live Status Badge
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              restaurant.name,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: ResponsiveHelper.getTitleLargeFontSize(context),
+                                  ),
+                            ),
+                            const SizedBox(width: 8),
+                            _StatusBadge(isOpen: isOpen),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                restaurant.address,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey.shade600,
+                                    ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // 3. Cart Icon with Badge
-              _HeaderCartIcon(cartItemCount: cartItemCount),
+                  // 3. Cart Icon
+                  _HeaderCartIcon(cartItemCount: cartItemCount),
+                ],
+              ),
             ],
-          ),
-        ],
+          );
+        },
+        loading: () => const _HeaderShimmer(),
+        error: (e, s) => const Text('Error loading branding'),
       ),
     );
   }
@@ -106,11 +122,7 @@ class _StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.circle,
-            size: 6,
-            color: isOpen ? Colors.green : Colors.red,
-          ),
+          Icon(Icons.circle, size: 6, color: isOpen ? Colors.green : Colors.red),
           const SizedBox(width: 4),
           Text(
             isOpen ? 'Open Now' : 'Closed',
@@ -168,6 +180,18 @@ class _HeaderCartIcon extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+class _HeaderShimmer extends StatelessWidget {
+  const _HeaderShimmer();
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 50,
+      width: double.infinity,
+      decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(12)),
     );
   }
 }

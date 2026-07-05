@@ -29,11 +29,20 @@ class OrderDetailsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Order Details',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Order Details',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              Text(
+                'ID: #${order.id.substring(0, 8).toUpperCase()}',
+                style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
           const Divider(height: 24),
           
@@ -82,23 +91,23 @@ class OrderDetailsCard extends StatelessWidget {
           
           const Divider(height: 32),
           
-          // Price Summary
+          // Price Summary using real DB data
           _PriceRow(label: 'Subtotal', value: order.totalPrice),
-          const _PriceRow(label: 'Delivery Fee', value: 5.00),
+          _PriceRow(label: 'Delivery Fee', value: order.deliveryFee),
           const SizedBox(height: 8),
           _PriceRow(
-            label: 'Total',
-            value: order.totalPrice + 5.00,
+            label: 'Total Paid',
+            value: order.totalPrice + order.deliveryFee,
             isTotal: true,
           ),
           
           const Divider(height: 32),
           
           // Delivery Info
-          const _InfoSection(
+          _InfoSection(
             icon: Icons.location_on_outlined,
             title: 'Delivery Address',
-            content: '123 Luxury Lane, Suite 456, NY',
+            content: order.deliveryAddress,
           ),
           const SizedBox(height: 16),
           _InfoSection(

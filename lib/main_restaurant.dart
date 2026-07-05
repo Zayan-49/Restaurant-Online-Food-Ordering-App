@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:online_food_ordering/core/config/app_config.dart';
+import 'package:online_food_ordering/core/config/supabase_config.dart';
 import 'package:online_food_ordering/main.dart';
 
-void main() {
-  const config = AppConfig(
-    appType: AppType.restaurant,
-    appName: 'Restaurant Admin',
-  );
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SupabaseConfig.initialize();
 
   runApp(
     ProviderScope(
       overrides: [
-        appConfigProvider.overrideWithValue(config),
+        appConfigProvider.overrideWith((ref) => AppConfigNotifier()..setConfig(AppType.restaurant)),
       ],
       child: const LuxuryFoodOrderingApp(),
     ),

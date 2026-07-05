@@ -1,10 +1,13 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
+import 'package:online_food_ordering/core/models/order_model.dart';
+import 'package:online_food_ordering/core/providers/order_history_provider.dart';
 import 'package:online_food_ordering/features/customer/profile/providers/user_provider.dart';
+import 'package:online_food_ordering/features/shared/auth/providers/auth_provider.dart';
 import 'package:online_food_ordering/routes/app_router.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -46,9 +49,15 @@ class ProfileScreen extends ConsumerWidget {
                     SizedBox(height: padding * 2),
 
                     // Order History Section
-                    const _SectionHeader(title: 'Order History'),
+                    _SectionHeader(
+                      title: 'Order History',
+                      action: TextButton(
+                        onPressed: () => context.pushNamed(AppRouteNames.orderHistory),
+                        child: const Text('View All'),
+                      ),
+                    ),
                     const SizedBox(height: 16),
-                    const _OrderHistoryList(),
+                    const _OrderHistoryPreview(),
                     SizedBox(height: padding * 2),
 
                     // Account Settings Section
@@ -73,7 +82,12 @@ class ProfileScreen extends ConsumerWidget {
                       icon: Icons.logout_rounded,
                       title: 'Logout',
                       textColor: Colors.redAccent,
-                      onTap: () {},
+                      onTap: () async {
+                        await ref.read(authControllerProvider).signOut();
+                        if (context.mounted) {
+                          context.go('/login');
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -104,10 +118,12 @@ class _ProfileHeader extends StatelessWidget {
         CircleAvatar(
           radius: 60,
           backgroundColor: Theme.of(context).colorScheme.primary,
-          backgroundImage: imagePath != null
-              ? (kIsWeb ? NetworkImage(imagePath!) : FileImage(File(imagePath!)) as ImageProvider)
+          backgroundImage: imagePath != null && imagePath!.isNotEmpty
+              ? (imagePath!.startsWith('http') 
+                  ? NetworkImage(imagePath!) 
+                  : FileImage(File(imagePath!)) as ImageProvider)
               : null,
-          child: imagePath == null
+          child: imagePath == null || imagePath!.isEmpty
               ? const Text(
                   'JD',
                   style: TextStyle(
@@ -117,7 +133,7 @@ class _ProfileHeader extends StatelessWidget {
                   ),
                 )
               : null,
-        ),
+      ),
         const SizedBox(height: 16),
         Text(
           name,
@@ -135,45 +151,66 @@ class _ProfileHeader extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.title, this.action});
 
   final String title;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-      ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        if (action != null) action!,
+      ],
     );
   }
 }
 
-class _OrderHistoryList extends StatelessWidget {
-  const _OrderHistoryList();
+class _OrderHistoryPreview extends ConsumerWidget {
+  const _OrderHistoryPreview();
 
   @override
-  Widget build(BuildContext context) {
-    // Fake data for order history
-    final orders = [
-      ('Beef Burger', 'May 20, 2026', '\$12.50', 'Delivered'),
-      ('Pepperoni Pizza', 'May 18, 2026', '\$15.00', 'Delivered'),
-      ('Cesar Salad', 'May 15, 2026', '\$10.00', 'Delivered'),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(orderHistoryProvider);
 
-    return Column(
-      children: orders
-          .map((order) => _OrderHistoryTile(
-                title: order.$1,
-                date: order.$2,
-                price: order.$3,
-                status: order.$4,
-              ))
-          .toList(),
+    return historyAsync.when(
+      data: (orders) {
+        if (orders.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Text('No orders yet', style: TextStyle(color: Colors.grey)),
+            ),
+          );
+        }
+        
+        final previewOrders = orders.take(2).toList();
+
+        return Column(
+          children: previewOrders.map((order) {
+            final firstItem = order.items.isNotEmpty ? order.items.first.food.title : 'Food Order';
+            final itemCount = order.items.length;
+            final title = itemCount > 1 ? '$firstItem +${itemCount - 1} more' : firstItem;
+            final dateStr = DateFormat('MMM dd, yyyy').format(order.createdAt);
+
+            return _OrderHistoryTile(
+              title: title,
+              date: dateStr,
+              price: '\$${order.totalPrice.toStringAsFixed(2)}',
+              status: order.status == OrderStatus.handedToDriver ? 'Delivered' : 'Pending',
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const Text('Error loading history'),
     );
   }
 }
@@ -240,7 +277,11 @@ class _OrderHistoryTile extends StatelessWidget {
               ),
               Text(
                 status,
-                style: const TextStyle(color: Colors.green, fontSize: 12),
+                style: TextStyle(
+                  color: status == 'Delivered' ? Colors.green : Colors.orange, 
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

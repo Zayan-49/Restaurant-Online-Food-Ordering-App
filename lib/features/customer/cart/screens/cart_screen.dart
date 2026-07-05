@@ -15,12 +15,10 @@ class CartScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cartItems = ref.watch(cartProvider);
     final cartTotal = ref.watch(cartTotalProvider);
-    final restaurant = ref.watch(restaurantProfileProvider);
+    final restaurantAsync = ref.watch(restaurantProfileProvider);
     
     final padding = ResponsiveHelper.getAdaptiveSize(context,
         mobile: 16, tablet: 24, desktop: 32);
-
-    final canCheckout = cartTotal >= restaurant.minOrderValue && restaurant.isCurrentlyOpen;
 
     return Scaffold(
       appBar: AppBar(
@@ -33,50 +31,58 @@ class CartScreen extends ConsumerWidget {
       body: SafeArea(
         child: cartItems.isEmpty
             ? _EmptyCartState(padding: padding)
-            : Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: ResponsiveHelper.getMaxWidth(context),
-                  ),
-                  child: ScreenBreakpoints.isDesktop(context) ||
-                          ScreenBreakpoints.isLargeDesktop(context)
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: _buildCartList(cartItems, padding, ref),
-                            ),
-                            Flexible(
-                              flex: 1,
-                              child: SingleChildScrollView(
-                                child: _CartSummary(
+            : restaurantAsync.when(
+                data: (restaurant) {
+                  final canCheckout = cartTotal >= restaurant.minOrderValue && restaurant.isCurrentlyOpen;
+                  
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: ResponsiveHelper.getMaxWidth(context),
+                      ),
+                      child: ScreenBreakpoints.isDesktop(context) ||
+                              ScreenBreakpoints.isLargeDesktop(context)
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildCartList(cartItems, padding, ref),
+                                ),
+                                Flexible(
+                                  flex: 1,
+                                  child: SingleChildScrollView(
+                                    child: _CartSummary(
+                                      total: cartTotal,
+                                      padding: padding,
+                                      isDesktop: true,
+                                      canCheckout: canCheckout,
+                                      minOrder: restaurant.minOrderValue,
+                                      isClosed: !restaurant.isCurrentlyOpen,
+                                      onCheckout: () => context.pushNamed(AppRouteNames.checkout),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                Expanded(child: _buildCartList(cartItems, padding, ref)),
+                                _CartSummary(
                                   total: cartTotal,
                                   padding: padding,
-                                  isDesktop: true,
                                   canCheckout: canCheckout,
                                   minOrder: restaurant.minOrderValue,
                                   isClosed: !restaurant.isCurrentlyOpen,
                                   onCheckout: () => context.pushNamed(AppRouteNames.checkout),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            Expanded(child: _buildCartList(cartItems, padding, ref)),
-                            _CartSummary(
-                              total: cartTotal,
-                              padding: padding,
-                              canCheckout: canCheckout,
-                              minOrder: restaurant.minOrderValue,
-                              isClosed: !restaurant.isCurrentlyOpen,
-                              onCheckout: () => context.pushNamed(AppRouteNames.checkout),
-                            ),
-                          ],
-                        ),
-                ),
+                    ),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, s) => Center(child: Text('Error loading business rules: $e')),
               ),
       ),
     );

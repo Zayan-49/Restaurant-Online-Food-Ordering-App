@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/core/responsive/screen_breakpoints.dart';
 import 'package:online_food_ordering/features/customer/cart/providers/cart_providers.dart';
@@ -27,7 +28,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isFavorite = ref.watch(favoritesProvider).contains(widget.food.id);
+    // Correctly watching AsyncValue based favorites state
+    final favoritesAsync = ref.watch(favoritesProvider);
+    final isFavorite = favoritesAsync.maybeWhen(
+      data: (ids) => ids.contains(widget.food.id),
+      orElse: () => false,
+    );
+
     final padding = ResponsiveHelper.getAdaptiveSize(context, mobile: 16, tablet: 24, desktop: 32);
     final isDesktop = ScreenBreakpoints.isDesktop(context) || ScreenBreakpoints.isLargeDesktop(context);
 
@@ -84,10 +91,15 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             child: Container(
               height: MediaQuery.sizeOf(context).height * 0.45,
               width: double.infinity,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/Burger.jpg'),
+              child: ClipRRect(
+                child: CachedNetworkImage(
+                  imageUrl: widget.food.imageUrl,
                   fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                  errorWidget: (context, url, error) => Image.asset(
+                    'assets/images/Burger.jpg',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
@@ -134,9 +146,14 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     borderRadius: BorderRadius.circular(24),
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: Image.asset(
-                        'assets/images/Burger.jpg',
+                      child: CachedNetworkImage(
+                        imageUrl: widget.food.imageUrl,
                         fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(color: Colors.grey.shade100),
+                        errorWidget: (context, url, error) => Image.asset(
+                          'assets/images/Burger.jpg',
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -333,7 +350,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
                 child: const Text('Add to Cart', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/features/shared/auth/providers/auth_provider.dart';
 import 'package:online_food_ordering/features/shared/auth/widgets/auth_button.dart';
 import 'package:online_food_ordering/features/shared/auth/widgets/auth_header.dart';
 import 'package:online_food_ordering/features/shared/auth/widgets/auth_textfield.dart';
 import 'package:online_food_ordering/features/shared/auth/widgets/forgot_password_text.dart';
-import 'package:online_food_ordering/features/shared/auth/widgets/social_login_button.dart';
 
-/// Luxury login screen following the app architecture and responsiveness rules.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -43,29 +40,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   Future<void> _submit() async {
-    ref.read(emailProvider.notifier).state = _emailController.text;
-    ref.read(passwordProvider.notifier).state = _passwordController.text;
-
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
-    final success = await ref.read(authControllerProvider).signIn();
-    if (success && mounted) {
-      context.go('/home');
-    }
-  }
+    ref.read(emailProvider.notifier).state = _emailController.text;
+    ref.read(passwordProvider.notifier).state = _passwordController.text;
 
-  Future<void> _handleGoogleSignIn() async {
-    final success = await ref.read(authControllerProvider).signInWithGoogle();
-    if (success && mounted) {
-      context.go('/home');
+    try {
+      final appType = await ref.read(authControllerProvider).signIn();
+      if (appType != null && mounted) {
+        // Redirection happens automatically via IndexedStack/Router logic
+        // but we force navigation to home to refresh the shell.
+        context.go('/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authLoadingProvider);
-    final googleLoading = ref.watch(googleLoadingProvider);
     final cardWidth = ResponsiveHelper.getAuthCardMaxWidth(context);
     final padding = ResponsiveHelper.getAdaptiveSize(context,
         mobile: 16, tablet: 24, desktop: 32);
@@ -101,13 +104,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             AuthTextField(
                               controller: _emailController,
                               label: 'Email',
-                              hint: 'you@restaurant.com',
+                              hint: 'user@example.com',
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Please enter your email';
-                                }
-                                if (!v.contains('@')) {
-                                  return 'Please enter a valid email';
                                 }
                                 return null;
                               },
@@ -121,9 +121,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
                                   return 'Please enter your password';
-                                }
-                                if (v.trim().length < 4) {
-                                  return 'Password is too short';
                                 }
                                 return null;
                               },
@@ -141,28 +138,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               isLoading: isLoading,
                               onPressed: _submit,
                             ),
-                            const SizedBox(height: 16),
-                            SocialLoginButton(
-                              label: 'Continue with Google',
-                              icon: MdiIcons.google,
-                              isLoading: googleLoading,
-                              onPressed: _handleGoogleSignIn,
-                            ),
                             const SizedBox(height: 24),
                             Wrap(
                               alignment: WrapAlignment.center,
                               children: [
-                                Text(
-                                  'Don\'t have an account?',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
+                                const Text('Don\'t have an account?'),
                                 TextButton(
                                   onPressed: () => context.go('/register'),
                                   child: Text(
                                     'Create Account',
                                     style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),

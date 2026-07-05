@@ -12,19 +12,18 @@ class RestaurantDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(restaurantOrdersProvider);
-    final isDesktop = ScreenBreakpoints.isDesktop(context) || ScreenBreakpoints.isLargeDesktop(context);
+    final ordersAsync = ref.watch(restaurantOrdersProvider);
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final isDesktop = ScreenBreakpoints.isDesktop(context) || ScreenBreakpoints.isLargeDesktop(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent, 
       appBar: AppBar(
         backgroundColor: primaryColor,
         elevation: 0,
-        centerTitle: false,
         automaticallyImplyLeading: false, 
         title: const Text(
-          'Dashboard',
+          'Operational Dashboard',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -36,34 +35,46 @@ class RestaurantDashboardScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: ResponsiveHelper.getAdaptivePadding(context, mobileValue: 16, desktopValue: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStatGrid(context, orders, primaryColor),
-              const SizedBox(height: 40),
-              _buildOrderSectionHeader(context, primaryColor),
-              const SizedBox(height: 20),
-              _buildOrdersView(context, ref, orders, isDesktop),
-            ],
+        child: ordersAsync.when(
+          data: (orders) => SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: ResponsiveHelper.getAdaptivePadding(context, mobileValue: 16, desktopValue: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatGrid(context, orders, primaryColor),
+                const SizedBox(height: 40),
+                _buildOrderSectionHeader(context, primaryColor),
+                const SizedBox(height: 20),
+                _buildOrdersView(context, ref, orders, isDesktop),
+              ],
+            ),
           ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
         ),
       ),
     );
   }
 
   Widget _buildStatGrid(BuildContext context, List<OrderModel> orders, Color primaryColor) {
-    final revenue = orders.fold(0.0, (sum, o) => sum + o.totalPrice);
+    // Only include successful or pending revenue, exclude cancelled
+    final revenue = orders
+        .where((o) => o.status != OrderStatus.cancelled)
+        .fold(0.0, (sum, o) => sum + o.totalPrice);
     
+    // Live orders are those that are NOT delivered AND NOT cancelled
+    final liveOrdersCount = orders
+        .where((o) => o.status != OrderStatus.handedToDriver && o.status != OrderStatus.cancelled)
+        .length;
+
     return Wrap(
       spacing: 16,
       runSpacing: 16,
       children: [
         _StatCard(title: 'Revenue', value: '\$${revenue.toStringAsFixed(0)}', icon: Icons.payments_outlined, color: primaryColor),
-        _StatCard(title: 'Orders', value: orders.length.toString(), icon: Icons.shopping_bag_outlined, color: Colors.orange),
-        _StatCard(title: 'Rating', value: '4.9', icon: Icons.star_outline_rounded, color: Colors.blue),
+        _StatCard(title: 'Live Orders', value: liveOrdersCount.toString(), icon: Icons.shopping_bag_outlined, color: Colors.orange),
+        _StatCard(title: 'Completed', value: orders.where((o) => o.status == OrderStatus.handedToDriver).length.toString(), icon: Icons.check_circle_outline_rounded, color: Colors.green),
       ],
     );
   }
@@ -82,11 +93,17 @@ class RestaurantDashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildOrdersView(BuildContext context, WidgetRef ref, List<OrderModel> orders, bool isDesktop) {
-    if (orders.isEmpty) {
+    // Filter: Hide both delivered and cancelled orders from the live view
+    final activeOrders = orders.where((o) => 
+      o.status != OrderStatus.handedToDriver && 
+      o.status != OrderStatus.cancelled
+    ).toList();
+    
+    if (activeOrders.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 80),
-          child: Text('No orders yet.', style: TextStyle(color: Colors.grey)),
+          child: Text('No active orders right now.', style: TextStyle(color: Colors.grey)),
         ),
       );
     }
@@ -101,16 +118,16 @@ class RestaurantDashboardScreen extends ConsumerWidget {
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
         ),
-        itemCount: orders.length,
+        itemCount: activeOrders.length,
         itemBuilder: (context, index) => AdminOrderCard(
-          order: orders[index],
-          onStatusUpdate: (s) => ref.read(restaurantOrderActionsProvider).updateOrderStatus(orders[index].id, s),
+          order: activeOrders[index],
+          onStatusUpdate: (s) => ref.read(restaurantOrderActionsProvider).updateOrderStatus(activeOrders[index].id, s),
         ).animate().fadeIn(delay: (index * 50).ms),
       );
     }
 
     return Column(
-      children: orders.map((o) => AdminOrderCard(
+      children: activeOrders.map((o) => AdminOrderCard(
         order: o,
         onStatusUpdate: (s) => ref.read(restaurantOrderActionsProvider).updateOrderStatus(o.id, s),
       ).animate().fadeIn()).toList(),

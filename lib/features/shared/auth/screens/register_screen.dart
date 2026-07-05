@@ -48,15 +48,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) return;
 
-    final success = await ref.read(authControllerProvider).signIn();
-    if (success && mounted) {
-      context.go('/home');
+    // Update state providers for the controller
+    ref.read(registerFullNameProvider.notifier).state = _nameController.text;
+    ref.read(registerEmailProvider.notifier).state = _emailController.text;
+    ref.read(registerPasswordProvider.notifier).state = _passwordController.text;
+
+    try {
+      final success = await ref.read(authControllerProvider).signUp();
+      if (success && mounted) {
+        // Supabase usually requires email verification.
+        // We will show a success message.
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Please check your email to verify.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.go('/login');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authLoadingProvider);
+    final isLoading = ref.watch(registerLoadingProvider);
     final cardWidth = ResponsiveHelper.getAuthCardMaxWidth(context);
     final padding = ResponsiveHelper.getAdaptiveSize(context,
         mobile: 16, tablet: 24, desktop: 32);

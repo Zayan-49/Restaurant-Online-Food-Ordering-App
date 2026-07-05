@@ -15,7 +15,21 @@ class AppConfig {
   });
 }
 
-/// Global provider for app configuration (set at startup)
-final appConfigProvider = Provider<AppConfig>((ref) {
-  throw UnimplementedError('appConfigProvider must be overridden in ProviderScope');
+class AppConfigNotifier extends StateNotifier<AppConfig> {
+  AppConfigNotifier() : super(const AppConfig(
+    appType: AppType.customer, 
+    appName: 'Luxury Food Ordering'
+  ));
+
+  void setConfig(AppType type) {
+    state = AppConfig(
+      appType: type,
+      appName: type == AppType.restaurant ? 'Elite Admin' : 'Luxury Food Ordering',
+    );
+  }
+}
+
+/// Global provider for app configuration that can be updated at runtime
+final appConfigProvider = StateNotifierProvider<AppConfigNotifier, AppConfig>((ref) {
+  return AppConfigNotifier();
 });

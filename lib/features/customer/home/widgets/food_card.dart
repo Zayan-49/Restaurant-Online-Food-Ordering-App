@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:online_food_ordering/core/responsive/responsive_helper.dart';
 import 'package:online_food_ordering/features/customer/cart/providers/cart_providers.dart';
+import 'package:online_food_ordering/features/customer/home/providers/favorites_provider.dart';
 import 'package:online_food_ordering/core/models/food_model.dart';
 import 'package:online_food_ordering/features/customer/home/widgets/expandable_description.dart';
 import 'package:online_food_ordering/routes/app_router.dart';
+import 'package:online_food_ordering/shared/widgets/shimmer_loaders.dart';
+import 'package:online_food_ordering/core/constants/app_assets.dart';
 
-/// Premium food card optimized for all screen sizes to prevent overflows.
 class FoodCard extends ConsumerWidget {
   const FoodCard({
     super.key,
     required this.food,
+    this.heroTag,
   });
 
   final FoodModel food;
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,6 +31,13 @@ class FoodCard extends ConsumerWidget {
     final buttonSize = ResponsiveHelper.getAdaptiveSize(context,
         mobile: 28, tablet: 32, desktop: 36);
 
+    final isFavorite = ref.watch(favoritesProvider).maybeWhen(
+      data: (ids) => ids.contains(food.id),
+      orElse: () => false,
+    );
+
+    final effectiveTag = heroTag ?? 'food_image_${food.id}';
+
     return GestureDetector(
       onTap: () => context.pushNamed(
         AppRouteNames.productDetails,
@@ -33,6 +45,7 @@ class FoodCard extends ConsumerWidget {
       ),
       child: Card(
         elevation: 3,
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
         ),
@@ -41,57 +54,104 @@ class FoodCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image section with Hero animation
+              // 1. Image section with Premium Blend Mask
               Expanded(
                 flex: 5,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Hero(
-                      tag: 'food_image_${food.id}', // Unique consistent tag
-                      child: Image.asset(
-                        'assets/images/Burger.jpg',
+                child: Hero(
+                  tag: effectiveTag,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      CachedNetworkImage(
+                        imageUrl: food.imageUrl,
                         fit: BoxFit.cover,
+                        placeholder: (context, url) => const FoodCardShimmer(),
+                        errorWidget: (context, url, error) => Image.asset(
+                          AppAssets.burgerPlaceholder,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                    // Rating badge
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              size: 14,
-                              color: Colors.amber,
+                      
+                      // LUXURY BLEND: Bottom Gradient to soften the transition
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: 40,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.9),
+                                Colors.white.withValues(alpha: 0.0),
+                              ],
                             ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '${food.rating}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      // Favorite (Heart) Button
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: GestureDetector(
+                          onTap: () => ref.read(favoritesProvider.notifier).toggleFavorite(food.id),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              size: 16,
+                              color: isFavorite ? Colors.redAccent : Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Rating badge
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                size: 14,
+                                color: Colors.amber,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 2),
+                              Text(
+                                '${food.rating}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
-              // Content section
+              // 2. Content section
               Expanded(
                 flex: 4,
                 child: Padding(
@@ -109,8 +169,6 @@ class FoodCard extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      
-                      // Constrained description
                       Expanded(
                         child: SingleChildScrollView(
                           physics: const NeverScrollableScrollPhysics(),
@@ -120,10 +178,7 @@ class FoodCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      
                       const SizedBox(height: 4),
-                      
-                      // Price and button row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

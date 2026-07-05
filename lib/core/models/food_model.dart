@@ -36,22 +36,22 @@ class FoodModel {
       'description': description,
       'category': category,
       'price': price,
-      'imageUrl': imageUrl,
+      'image_url': imageUrl, // Consistent with DB field name
       'rating': rating,
-      'reviewCount': reviewCount,
+      'review_count': reviewCount,
     };
   }
 
   factory FoodModel.fromMap(Map<String, dynamic> map) {
     return FoodModel(
-      id: map['id'] as String,
-      title: map['title'] as String,
-      description: map['description'] as String,
-      category: map['category'] as String,
-      price: (map['price'] as num).toDouble(),
-      imageUrl: map['imageUrl'] as String,
-      rating: (map['rating'] as num).toDouble(),
-      reviewCount: map['reviewCount'] as int,
+      id: map['id']?.toString() ?? '',
+      title: map['title']?.toString() ?? 'Untitled Dish',
+      description: map['description']?.toString() ?? 'No description available.',
+      category: map['category']?.toString() ?? 'General',
+      price: (map['price'] as num?)?.toDouble() ?? 0.0,
+      imageUrl: map['image_url']?.toString() ?? map['imageUrl']?.toString() ?? 'https://via.placeholder.com/150',
+      rating: (map['rating'] as num?)?.toDouble() ?? 5.0,
+      reviewCount: (map['review_count'] as num?)?.toInt() ?? (map['reviewCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

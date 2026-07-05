@@ -1,58 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:online_food_ordering/core/models/order_model.dart';
-import 'package:online_food_ordering/core/models/food_model.dart';
-import 'package:online_food_ordering/core/models/cart_item_model.dart';
+import 'package:online_food_ordering/core/config/supabase_config.dart';
 
-/// MOCK DATA FOR UI DEVELOPMENT (No Backend Yet)
-final restaurantOrdersProvider = NotifierProvider<RestaurantOrdersNotifier, List<OrderModel>>(RestaurantOrdersNotifier.new);
+/// Real-time provider that streams all incoming orders for the Admin Dashboard.
+final restaurantOrdersProvider = StreamProvider<List<OrderModel>>((ref) {
+  return SupabaseConfig.client
+      .from('orders')
+      .stream(primaryKey: ['id'])
+      .order('created_at', ascending: false) // Show newest orders first
+      .map((data) => data.map((map) => OrderModel.fromMap(map)).toList());
+});
 
-class RestaurantOrdersNotifier extends Notifier<List<OrderModel>> {
-  @override
-  List<OrderModel> build() {
-    return [
-      OrderModel(
-        id: 'ORD-1001',
-        items: [
-          CartItemModel(
-            food: const FoodModel(id: '1', title: 'Premium Beef Burger', price: 18.99, description: '', category: 'Burgers', imageUrl: '', rating: 4.8, reviewCount: 100),
-            quantity: 2,
-          ),
-        ],
-        totalPrice: 37.98,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
-        status: OrderStatus.waiting,
-        estimatedTime: '25-30 mins',
-        deliveryAddress: '123 Luxury Lane, NY',
-      ),
-      OrderModel(
-        id: 'ORD-1002',
-        items: [
-          CartItemModel(
-            food: const FoodModel(id: '4', title: 'Margherita Pizza', price: 16.99, description: '', category: 'Pizza', imageUrl: '', rating: 4.9, reviewCount: 100),
-            quantity: 1,
-          ),
-        ],
-        totalPrice: 16.99,
-        timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-        status: OrderStatus.confirmed,
-        estimatedTime: '15 mins',
-        deliveryAddress: '456 Elite Ave, NY',
-      ),
-    ];
-  }
+/// Actions provider for Admin to update order statuses.
+final restaurantOrderActionsProvider = Provider((ref) => RestaurantOrderActions());
 
-  void updateOrderStatus(String orderId, OrderStatus status) {
-    state = [
-      for (final order in state)
-        if (order.id == orderId)
-          order.copyWith(status: status)
-        else
-          order,
-    ];
+class RestaurantOrderActions {
+  final _supabase = SupabaseConfig.client;
+
+  Future<void> updateOrderStatus(String orderId, OrderStatus newStatus) async {
+    try {
+      await _supabase.from('orders').update({
+        'status': newStatus.name,
+      }).eq('id', orderId);
+    } catch (e) {throw Exception('Failed to update order status: $e');
+    }
   }
 }
-
-/// Provider to handle order actions in UI
-final restaurantOrderActionsProvider = Provider((ref) {
-  return ref.read(restaurantOrdersProvider.notifier);
-});

@@ -19,6 +19,8 @@ import 'package:online_food_ordering/features/customer/profile/screens/edit_prof
 import 'package:online_food_ordering/features/shared/splash/screens/splash_screen.dart';
 import 'package:online_food_ordering/features/restaurant/screens/admin_shell_screen.dart';
 
+import 'package:online_food_ordering/features/customer/orders/screens/order_history_screen.dart';
+
 class AppRoutes {
   AppRoutes._();
   static const String splash = '/';
@@ -33,6 +35,7 @@ class AppRoutes {
   static const String cart = '/cart';
   static const String checkout = '/checkout';
   static const String orders = '/orders';
+  static const String orderHistory = '/order-history';
   static const String editProfile = '/edit-profile';
   static const String adminShell = '/admin';
 }
@@ -51,6 +54,7 @@ class AppRouteNames {
   static const String cart = 'cart';
   static const String checkout = 'checkout';
   static const String orders = 'orders';
+  static const String orderHistory = 'orderHistory';
   static const String editProfile = 'editProfile';
   static const String adminShell = 'adminShell';
 }
@@ -115,7 +119,7 @@ final GoRouter appRouter = GoRouter(
           builder: (context, ref, child) {
             final config = ref.watch(appConfigProvider);
             if (config.appType == AppType.restaurant) {
-              return const HomeScreen();
+              return const AdminShellScreen();
             }
             return const HomeScreen();
           },
@@ -158,6 +162,13 @@ final GoRouter appRouter = GoRouter(
       name: AppRouteNames.orders,
       pageBuilder: (context, state) => const NoTransitionPage(
         child: OrdersScreen(),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.orderHistory,
+      name: AppRouteNames.orderHistory,
+      pageBuilder: (context, state) => const NoTransitionPage(
+        child: OrderHistoryScreen(),
       ),
     ),
 
