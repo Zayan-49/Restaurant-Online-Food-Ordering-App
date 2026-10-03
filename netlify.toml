@@ -1,5 +1,5 @@
 [build]
-  command = "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && export PATH=\"$PATH:`pwd`/flutter/bin\" && chmod +x generate_config.sh && ./generate_config.sh && flutter build web"
+  command = "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && export PATH=\"$PATH:`pwd`/flutter/bin\" && chmod +x generate_config.sh && ./generate_config.sh && flutter build web --release --no-tree-shake-icons"
   publish = "build/web"
 
 [[redirects]]
