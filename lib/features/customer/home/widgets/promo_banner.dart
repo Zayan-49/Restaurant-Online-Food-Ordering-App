@@ -20,6 +20,7 @@ class _PromoBannerState extends ConsumerState<PromoBanner> {
   Timer? _timer;
   int _currentPage = 0;
   double? _lastViewportFraction;
+  bool _timerStarted = false;
 
   @override
   void dispose() {
@@ -29,23 +30,24 @@ class _PromoBannerState extends ConsumerState<PromoBanner> {
   }
 
   void _startAutoSlide(int itemCount) {
+    if (_timerStarted || itemCount <= 1) return;
+    _timerStarted = true;
+    
     _timer?.cancel();
-    if (itemCount <= 1) return;
-
     _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (!mounted || _pageController == null || !_pageController!.hasClients) return;
+      
       if (_currentPage < itemCount - 1) {
         _currentPage++;
       } else {
         _currentPage = 0;
       }
 
-      if (_pageController != null && _pageController!.hasClients) {
-        _pageController!.animateToPage(
-          _currentPage,
-          duration: const Duration(milliseconds: 1000),
-          curve: Curves.easeInOutCubic,
-        );
-      }
+      _pageController!.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.easeInOutCubic,
+      );
     });
   }
 
@@ -53,10 +55,6 @@ class _PromoBannerState extends ConsumerState<PromoBanner> {
   Widget build(BuildContext context) {
     final promosAsync = ref.watch(allPromosProvider);
     
-    // PREMIUM VIEWPORT LOGIC: 
-    // Desktop: 0.3 means 3 cards take 90% space, 4th shows thoda sa (10%).
-    // Tablet: 0.45 means 2 cards take 90% space.
-    // Mobile: 0.85 means 1 card takes 85% space.
     final isDesktop = ScreenBreakpoints.isDesktop(context) || ScreenBreakpoints.isLargeDesktop(context);
     final isTablet = ScreenBreakpoints.isTablet(context);
     final currentFraction = isDesktop ? 0.3 : (isTablet ? 0.45 : 0.85);
@@ -71,13 +69,15 @@ class _PromoBannerState extends ConsumerState<PromoBanner> {
     }
 
     return promosAsync.when(
+      skipLoadingOnRefresh: true, // Don't show empty state if just refreshing
       data: (allPromos) {
         final activePromos = allPromos.where((p) => p.isActive).toList();
         if (activePromos.isEmpty) return const SizedBox.shrink();
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-           _startAutoSlide(activePromos.length);
-        });
+        // Safe timer start
+        if (!_timerStarted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoSlide(activePromos.length));
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,17 +100,12 @@ class _PromoBannerState extends ConsumerState<PromoBanner> {
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: activePromos.length,
-                padEnds: false, // Start from the extreme left for luxury look
+                padEnds: false,
                 onPageChanged: (index) => _currentPage = index,
                 itemBuilder: (context, index) {
-                  return AnimatedBuilder(
-                    animation: _pageController!,
-                    builder: (context, child) {
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
-                        child: _PromoCard(promo: activePromos[index]),
-                      );
-                    },
+                  return Padding(
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: _PromoCard(promo: activePromos[index]),
                   );
                 },
               ),
@@ -161,7 +156,6 @@ class _PromoCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // 1. High-Quality Image
             CachedNetworkImage(
               imageUrl: promo.imageUrl,
               fit: BoxFit.cover,
@@ -171,8 +165,6 @@ class _PromoCard extends StatelessWidget {
                 child: const Icon(Icons.broken_image_outlined, color: Colors.grey),
               ),
             ),
-            
-            // 2. Multi-layered Luxury Gradient
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -187,8 +179,6 @@ class _PromoCard extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // 3. Branded Content
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(

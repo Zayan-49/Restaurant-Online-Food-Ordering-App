@@ -8,7 +8,10 @@ class AppTheme {
   AppTheme._();
   static ThemeData get lightTheme {
     final baseTheme = ThemeData.light(useMaterial3: true);
+    
+    // Applying Poppins with a fallback to avoid mid-frame assertion errors on Web
     final textTheme = GoogleFonts.poppinsTextTheme(AppTextTheme.lightTextTheme);
+
     return baseTheme.copyWith(
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,

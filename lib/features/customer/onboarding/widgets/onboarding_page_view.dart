@@ -31,25 +31,33 @@ class OnboardingPageView extends StatelessWidget {
       itemBuilder: (context, index) {
         final model = pages[index];
         final isActive = index == currentIndex;
+        
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              OnboardingImage(
-                model: model,
-                isActive: isActive,
-                isDesktop: isDesktop,
-                isTablet: isTablet,
+          child: Center(
+
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min, // Ensure Column only takes needed space
+                children: [
+                  OnboardingImage(
+                    model: model,
+                    isActive: isActive,
+                    isDesktop: isDesktop,
+                    isTablet: isTablet,
+                  ),
+                  const SizedBox(height: 32),
+                  OnboardingContent(
+                    model: model,
+                    isActive: isActive,
+                    isDesktop: isDesktop,
+                    isTablet: isTablet,
+                  ),
+                ],
               ),
-              const SizedBox(height: 32),
-              OnboardingContent(
-                model: model,
-                isActive: isActive,
-                isDesktop: isDesktop,
-                isTablet: isTablet,
-              ),
-            ],
+            ),
           ),
         );
       },

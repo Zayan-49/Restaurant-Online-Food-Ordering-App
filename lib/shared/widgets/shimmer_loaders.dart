@@ -43,9 +43,10 @@ class FoodCardShimmer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. Image skeleton (Flex 5)
+            // 1. Image skeleton (Fixed flex)
             Expanded(
               flex: 5,
+
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -56,53 +57,53 @@ class FoodCardShimmer extends StatelessWidget {
                 ),
               ),
             ),
-            // 2. Content skeleton (Flex 4) - Resized to prevent overflow
+            // 2. Content skeleton (Flex 4) - Optimized for very small height constraints
             Expanded(
+
               flex: 4,
               child: Padding(
-                padding: const EdgeInsets.all(10), // Reduced slightly from 12
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // Reduced vertical padding
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Stable distribution without Spacer
                   children: [
-                    // Title placeholder
+                    // Title placeholder (Micro height)
                     Container(
                       width: double.infinity,
-                      height: 12, // Reduced from 14
+                      height: 8, 
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const SizedBox(height: 6), // Reduced from 8
-                    // Subtitle placeholder
+                    // Subtitle placeholder (Micro height)
                     Container(
-                      width: 80, // Reduced from 100
-                      height: 8, // Reduced from 10
+                      width: 50,
+                      height: 5,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const Spacer(),
-                    // Bottom row (Price + Button)
+                    // Bottom row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          width: 40, // Reduced from 50
-                          height: 14, // Reduced from 16
+                          width: 25,
+                          height: 8,
+
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                         Container(
-                          width: 24, // Reduced from 28
-                          height: 24, // Reduced from 28
+                          width: 18,
+                          height: 18,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(5),
                           ),
                         ),
                       ],
@@ -127,7 +128,7 @@ class CategoryShimmer extends StatelessWidget {
     return BaseShimmer(
       child: Container(
         width: 80,
-        height: 40,
+        height: 35,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: Colors.white,

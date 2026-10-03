@@ -26,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
       body: IndexedStack(
         index: bottomNavIndex,
         children: [
-          const _HomeBody(),
+          _HomeBody(key: const PageStorageKey('home_main_body')), 
           const FavoritesScreen(),
           const OrdersScreen(),
           const ProfileScreen(),
@@ -52,17 +52,24 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _HomeBody extends ConsumerWidget {
-  const _HomeBody();
+  const _HomeBody({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final padding = ResponsiveHelper.getAdaptiveSize(context, mobile: 16, tablet: 24, desktop: 32);
-    final foodsAsync = ref.watch(allFoodsProvider);
-    final filteredFoods = ref.watch(filteredFoodsProvider);
+    
+    // 1. Get filtered list (which is now stable even during background loads)
+    final foods = ref.watch(filteredFoodsProvider);
+    
+    // 2. ONLY show initial loading if the list is empty AND the stream is actually loading
+    final isStreamLoading = ref.watch(allFoodsStreamProvider).isLoading;
+    final showShimmers = isStreamLoading && foods.isEmpty;
+
     final selectedCat = ref.watch(selectedCategoryProvider);
 
     return SafeArea(
       child: CustomScrollView(
+        key: const PageStorageKey('home_scroll_view'),
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
           const SliverToBoxAdapter(child: HomeHeader()),
@@ -77,25 +84,20 @@ class _HomeBody extends ConsumerWidget {
               selectedCategory: selectedCat,
               categories: const [
                 CategoryModel(id: 'all', name: 'All'),
-                CategoryModel(id: 'burgers', name: 'Burgers'),
-                CategoryModel(id: 'pizza', name: 'Pizza'),
-                CategoryModel(id: 'bbq', name: 'BBQ'),
-                CategoryModel(id: 'desserts', name: 'Desserts'),
-                CategoryModel(id: 'drinks', name: 'Drinks'),
+                CategoryModel(id: 'Deals', name: 'Deals'),
+                CategoryModel(id: 'Burgers', name: 'Burgers'),
+                CategoryModel(id: 'Pizza', name: 'Pizza'),
+                CategoryModel(id: 'BBQ', name: 'BBQ'),
+                CategoryModel(id: 'Desserts', name: 'Desserts'),
+                CategoryModel(id: 'Drinks', name: 'Drinks'),
               ],
               onCategorySelected: (cat) => ref.read(selectedCategoryProvider.notifier).state = cat,
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
           
-          foodsAsync.when(
-            data: (_) => SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              sliver: SliverToBoxAdapter(
-                child: ResponsiveFoodGrid(foods: filteredFoods),
-              ),
-            ),
-            loading: () => SliverPadding(
+          if (showShimmers)
+            SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: padding),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -109,11 +111,25 @@ class _HomeBody extends ConsumerWidget {
                   childCount: 6,
                 ),
               ),
+            )
+          else if (foods.isNotEmpty)
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              sliver: SliverToBoxAdapter(
+                child: ResponsiveFoodGrid(
+                  foods: foods,
+                  heroTagPrefix: 'home_grid', 
+                ),
+              ),
+            )
+          else
+            const SliverToBoxAdapter(
+              child: Center(child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Text('No results found.'),
+              )),
             ),
-            error: (err, stack) => SliverToBoxAdapter(
-              child: Center(child: Text('Error: $err')),
-            ),
-          ),
+
           const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
         ],
       ),

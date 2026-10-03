@@ -6,8 +6,6 @@ import 'package:online_food_ordering/features/customer/cart/providers/cart_provi
 import 'package:online_food_ordering/features/customer/orders/providers/customer_orders_provider.dart';
 import 'package:online_food_ordering/core/providers/restaurant_profile_provider.dart';
 import 'package:online_food_ordering/features/customer/checkout/widgets/order_summary_card.dart';
-import 'package:online_food_ordering/features/customer/checkout/widgets/payment_method_card.dart';
-import 'package:online_food_ordering/features/customer/checkout/widgets/delivery_address_card.dart';
 import 'package:online_food_ordering/routes/app_router.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {

@@ -174,7 +174,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   children: [
                     _buildHeaderInfo().animate().fadeIn(duration: 400.ms).slideX(begin: 0.05),
                     const SizedBox(height: 32),
-                    _buildDescription().animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.05),
+                    // Constrain height of description on desktop to avoid push-out
+                    Flexible(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: _buildDescription(),
+                      ),
+                    ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.05),
                     const SizedBox(height: 48),
                     _buildQuantitySection().animate().fadeIn(delay: 400.ms),
                   ],

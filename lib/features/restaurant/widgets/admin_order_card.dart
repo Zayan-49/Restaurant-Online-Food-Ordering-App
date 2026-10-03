@@ -34,7 +34,8 @@ class AdminOrderCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min
+          ,
           children: [
             // Status Banner with Order Type
             Container(
@@ -103,7 +104,8 @@ class AdminOrderCard extends StatelessWidget {
                           child: Text(
                             order.deliveryAddress,
                             style: const TextStyle(color: Colors.black54, fontSize: 13),
-                            maxLines: 2,
+                            maxLines: 3, // Support longer addresses
+
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

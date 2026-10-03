@@ -1,4 +1,3 @@
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -15,9 +14,11 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.online_food_ordering"
@@ -27,20 +28,6 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    }
-
-    flavorDimensions += "tier"
-    productFlavors {
-        create("customer") {
-            dimension = "tier"
-            applicationId = "com.example.online_food_ordering.customer"
-            versionNameSuffix = "-customer"
-        }
-        create("restaurant") {
-            dimension = "tier"
-            applicationId = "com.example.online_food_ordering.restaurant"
-            versionNameSuffix = "-restaurant"
-        }
     }
 
     buildTypes {

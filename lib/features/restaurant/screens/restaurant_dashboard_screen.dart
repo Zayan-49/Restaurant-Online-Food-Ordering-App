@@ -7,6 +7,9 @@ import 'package:online_food_ordering/core/models/order_model.dart';
 import 'package:online_food_ordering/features/restaurant/providers/restaurant_orders_provider.dart';
 import 'package:online_food_ordering/features/restaurant/widgets/admin_order_card.dart';
 
+import 'package:online_food_ordering/features/shared/auth/providers/auth_provider.dart';
+import 'package:go_router/go_router.dart';
+
 class RestaurantDashboardScreen extends ConsumerWidget {
   const RestaurantDashboardScreen({super.key});
 
@@ -28,8 +31,14 @@ class RestaurantDashboardScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+            onPressed: () async {
+              await ref.read(authControllerProvider).signOut();
+              if (context.mounted) {
+                context.go('/login');
+              }
+            },
+            icon: const Icon(Icons.logout_rounded, color: Colors.white),
+            tooltip: 'Logout',
           ),
           const SizedBox(width: 8),
         ],
@@ -114,7 +123,7 @@ class RestaurantDashboardScreen extends ConsumerWidget {
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 400,
-          mainAxisExtent: 320,
+          mainAxisExtent: 360, // INCREASED: To give more vertical room for long addresses
           crossAxisSpacing: 20,
           mainAxisSpacing: 20,
         ),
